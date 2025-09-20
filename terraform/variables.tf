@@ -23,6 +23,5 @@ variable "table_id" {
 }
 
 variable "image" {
-     type = string
-     default = "micaelleffr/nome-da-imagem:latest"   
+  default = "us-central1-docker.pkg.dev/graphite-byte-472516-n8/ml-repo/ml-api:latest"
 }
