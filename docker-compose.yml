@@ -1,24 +1,14 @@
-# Para usar, execute:
-# > docker-compose up -d
-#
-# Depois execute o PSQL dentro do container:
-# > docker exec -it postgres_university psql -U university
-# 
-# Agora você pode fazer consultas sql (no terminal XD)
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:16
-    container_name: postgres_university
-    environment:
-      POSTGRES_USER: university
-      POSTGRES_PASSWORD: university
-    ports:
-      - "5432:5432"
+  api:
+    build: .
+    container_name: api-ml
+    env_file:
+      - .env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
+      - ./src:/app/src
+      - ./keys:/app/keys 
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/graphite-byte-472516-n8-06240f9a454d.json
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    command: uvicorn src.main:app --host 0.0.0.0 --port ${API_PORT}
