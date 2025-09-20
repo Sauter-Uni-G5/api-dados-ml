@@ -9,7 +9,6 @@ class DataService:
         self.table_ref = f"{settings.PROJECT_ID}.{settings.BIGQUERY_DATASET}.{settings.BIGQUERY_TABLE}"
 
     def get_data(self, query: str):
-        """Executa uma query SELECT no BigQuery."""
         try:
             query_job = self.client.query(query)
             results = query_job.result()
@@ -19,7 +18,6 @@ class DataService:
             raise
 
     def post_data(self, data: dict):
-        """Insere dados na tabela do BigQuery."""
         try:
             errors = self.client.insert_rows_json(self.table_ref, [data])
             if errors:
@@ -30,5 +28,4 @@ class DataService:
             logger.error(f"Erro na inserção BigQuery: {e}")
             raise
 
-# Instância singleton para reuse
 data_service = DataService()
