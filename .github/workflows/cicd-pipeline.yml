@@ -133,6 +133,7 @@ jobs:
     steps:
       - name: Send Slack notification
         if: ${{ always() }}
+        shell: bash
         run: |
           STATUS="SUCCESS"
           if [ "${{ job.status }}" != "success" ]; then
