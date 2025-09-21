@@ -1,18 +1,13 @@
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = ">= 4.0.0"
-    }
-  }
-
-  backend "gcs" {
-    bucket = "meu-bucket-terraform" # troque pelo seu bucket de state
-    prefix = "terraform/state"
-  }
+provider "google" {
+  credentials = file("terraform-key.json")
+  project     = var.project
+  region      = var.region
 }
 
-provider "google" {
-  project = var.project
-  region  = var.region
+terraform {
+  backend "gcs" {
+    credentials = "terraform-key.json"
+    bucket      = "terraform-sauter-university"
+    prefix      = "terraform/state"
+  }
 }
