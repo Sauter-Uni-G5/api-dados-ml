@@ -1,4 +1,6 @@
+# ===========================
 # Service Account
+# ===========================
 resource "google_service_account" "ml_api_sa" {
   account_id   = "ml-api-sa"
   display_name = "Service Account para Cloud Run API"
@@ -25,21 +27,23 @@ resource "google_project_iam_member" "ml_api_sa_cloud_run_invoker" {
   member  = "serviceAccount:${google_service_account.ml_api_sa.email}"
 }
 
+# Permissão específica para ler do Artifact Registry
 resource "google_artifact_registry_repository_iam_member" "ml_api_sa_reader" {
-  repository = "ml-repo" 
+  repository = "ml-repo"
   location   = "us-central1"
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.ml_api_sa.email}"
 }
 
-# Cria Dataset BigQuery
+# ===========================
+# BigQuery Dataset e Tabela
+# ===========================
 resource "google_bigquery_dataset" "ml_dataset" {
   dataset_id = var.dataset_id
   location   = "US"
 }
 
-# Cria Tabela BigQuery
-resource "google_bigquery_table" "ml_table" { 
+resource "google_bigquery_table" "ml_table" {
   dataset_id = google_bigquery_dataset.ml_dataset.dataset_id
   table_id   = var.table_id
   schema     = <<EOF
@@ -63,23 +67,21 @@ resource "google_bigquery_table" "ml_table" {
 EOF
 }
 
-# Cria API no Cloud Run
+# ===========================
+# Cloud Run Service
+# ===========================
 resource "google_cloud_run_service" "api" {
   name     = "ml-api"
   location = var.region
 
   template {
-    metadata {
-      autogenerate_revision_name = true  # Evita erro 409
-    }
     spec {
       service_account_name = google_service_account.ml_api_sa.email
       containers {
         image = "${var.image_repo}:${var.image_tag}"
         ports {
-          container_port = 8080  # Ajuste se necessário
+          container_port = 8080
         }
-        # Adicione env vars ou recursos se precisar
       }
     }
   }
@@ -95,7 +97,9 @@ resource "google_cloud_run_service" "api" {
   ]
 }
 
-# Permite acesso público (ajuste se quiser restringir)
+# ===========================
+# Permite acesso público ao Cloud Run
+# ===========================
 resource "google_cloud_run_service_iam_member" "public_access" {
   service  = google_cloud_run_service.api.name
   location = google_cloud_run_service.api.location
