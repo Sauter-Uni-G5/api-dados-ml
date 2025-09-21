@@ -1,33 +1,22 @@
-variable "project" {
-    type = string
-    default = "graphite-byte-472516-n8"
-  
+provider "google" {
+  project = var.project
+  region  = var.region
 }
 
-variable "region" {
-    type = string
-    default = "us-central1"
-  
+resource "google_cloud_run_service" "api" {
+  name     = var.image_name
+  location = var.region
+
+  template {
+    spec {
+      containers {
+        image = "us-central1-docker.pkg.dev/${var.project}/${var.repo_name}/${var.image_name}:${var.docker_image_version}"
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
 }
-
-variable "dataset_id" {
-    type = string
-    default = "ml_dataset"
-  
-}
-
-variable "table_id" {
-    type = string
-    default = "ml_table"
-  
-}
-
-/*variable "image" {
-  default = "us-central1-docker.pkg.dev/graphite-byte-472516-n8/ml-repo/ml-api:3.10"
-}*/
-
-variable "docker_image_version" {
-  description = "Versão da imagem Docker a ser usada no Cloud Run"
-  type        = string
-}
-
