@@ -88,6 +88,12 @@ jobs:
         with:
           terraform_version: 1.6.0
 
+      - name: Decode GCP Service Account Base64 for Terraform
+        run: |
+          echo "${{ secrets.GCP_SA_KEY_BASE64 }}" | base64 --decode > /tmp/sa.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
+        shell: bash
+
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
