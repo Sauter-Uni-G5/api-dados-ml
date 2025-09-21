@@ -86,16 +86,14 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Decode GCP Service Account Base64 for Terraform
+        run: echo "${{ secrets.GCP_SA_KEY_BASE64 }}" | base64 --decode > /tmp/sa.json
+
+      - name: Terraform Init & Apply
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
         run: |
-          echo "${{ secrets.GCP_SA_KEY_BASE64 }}" | base64 --decode > /tmp/sa.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
-        shell: bash
-
-      - name: Terraform Init
-        run: terraform -chdir=terraform init -backend-config="credentials=/tmp/sa.json"
-
-      - name: Terraform Apply
-        run: terraform -chdir=terraform apply -auto-approve
+          terraform -chdir=terraform init -backend-config="credentials=/tmp/sa.json"
+          terraform -chdir=terraform apply -auto-approve
 
   # Job 4: Deploy no Cloud Run
   deploy:
@@ -133,7 +131,6 @@ jobs:
     steps:
       - name: Send Slack notification
         if: ${{ always() }}
-        shell: bash
         run: |
           STATUS="SUCCESS"
           if [ "${{ job.status }}" != "success" ]; then
