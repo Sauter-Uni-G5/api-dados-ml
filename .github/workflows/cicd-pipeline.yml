@@ -53,11 +53,8 @@ jobs:
 
       - name: Configure Service Account and Docker
         run: |
-          # Decodifica o Base64 do secret para JSON
           echo "${{ secrets.GCP_SA_KEY_BASE64 }}" | base64 --decode > /tmp/sa.json
-          # Ativa a Service Account
           gcloud auth activate-service-account --key-file=/tmp/sa.json
-          # Configura Docker para Artifact Registry
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Set Docker image version
@@ -95,7 +92,7 @@ jobs:
         shell: bash
 
       - name: Terraform Init
-        run: terraform -chdir=terraform init
+        run: terraform -chdir=terraform init -backend-config="credentials=/tmp/sa.json"
 
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve
