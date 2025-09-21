@@ -8,6 +8,16 @@ variable "region" {
   default = "us-central1"
 }
 
+variable "dataset_id" {
+  type    = string
+  default = "ml_dataset"
+}
+
+variable "table_id" {
+  type    = string
+  default = "ml_table"
+}
+
 variable "repo_name" {
   type    = string
   default = "ml-repo"
