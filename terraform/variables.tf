@@ -22,8 +22,12 @@ variable "table_id" {
   
 }
 
-variable "image" {
+/*variable "image" {
   default = "us-central1-docker.pkg.dev/graphite-byte-472516-n8/ml-repo/ml-api:3.10"
+}*/
+
+variable "docker_image_version" {
+  description = "Versão da imagem Docker a ser usada no Cloud Run"
   type        = string
 }
 
