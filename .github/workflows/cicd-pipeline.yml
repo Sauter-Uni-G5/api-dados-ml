@@ -61,7 +61,11 @@ jobs:
     steps:
       - name: Send Slack notification
         run: |
-          STATUS="${{ needs.deploy.result }}"
+          # Captura o resultado do job deploy
+          STATUS="${{ needs.deploy.conclusion }}"
+          # Converte 'success' ou 'failure' para maiúscula
+          STATUS=$(echo $STATUS | awk '{print toupper($0)}')
+          # Envia notificação
           curl -X POST -H 'Content-type: application/json' \
                --data "{\"text\":\"CI/CD Pipeline - ML API finished with status: $STATUS\"}" \
                ${{ env.SLACK_WEBHOOK }}
