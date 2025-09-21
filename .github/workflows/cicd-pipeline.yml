@@ -11,10 +11,8 @@ env:
   REGION: us-central1
   REPO_NAME: ml-repo
   IMAGE_NAME: ml-api
-  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
 jobs:
-  # Job único: Build, Push Docker e Deploy Cloud Run
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -52,20 +50,3 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated
-
-  # Job: Slack Notification
-  slack-notify:
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: always()
-    steps:
-      - name: Send Slack notification
-        run: |
-          # Captura o resultado do job deploy
-          STATUS="${{ needs.deploy.conclusion }}"
-          # Converte 'success' ou 'failure' para maiúscula
-          STATUS=$(echo $STATUS | awk '{print toupper($0)}')
-          # Envia notificação
-          curl -X POST -H 'Content-type: application/json' \
-               --data "{\"text\":\"CI/CD Pipeline - ML API finished with status: $STATUS\"}" \
-               ${{ env.SLACK_WEBHOOK }}
