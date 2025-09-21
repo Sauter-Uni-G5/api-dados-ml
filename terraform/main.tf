@@ -77,7 +77,8 @@ resource "google_cloud_run_service" "api" {
       service_account_name = google_service_account.ml_api_sa.email
 
       containers {
-        image = var.image
+        image = "us-central1-docker.pkg.dev/${var.project_id}/${var.repo_name}/${var.image_name}:${var.docker_image_version}"
+        #image = var.image
       }
     }
   }
