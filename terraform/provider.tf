@@ -1,13 +1,18 @@
-provider "google" {
-  #credentials = file("terraform-key.json")
-  project     = "graphite-byte-472516-n8"
-  region      = "us-central1"
-  credentials = file("/tmp/sa.json")
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 4.0.0"
+    }
+  }
+
+  backend "gcs" {
+    bucket = "meu-bucket-terraform" # troque pelo seu bucket de state
+    prefix = "terraform/state"
+  }
 }
 
-terraform {  
-  backend "gcs" {
-     credentials = "terraform-key.json"
-    bucket = "terraform-sauter-university"  
-  }
+provider "google" {
+  project = var.project
+  region  = var.region
 }
