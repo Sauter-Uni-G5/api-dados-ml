@@ -31,20 +31,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
+
       - name: Run tests
         run: pytest tests/
 
-  # Job 2: Build e Push Docker
-  docker:
+  # Job 2: Build, Push Docker e Deploy Cloud Run
+  deploy:
     runs-on: ubuntu-latest
     needs: test
-    outputs:
-      version: ${{ steps.set-version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install gcloud SDK
+      - name: Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ env.PROJECT_ID }}
@@ -55,47 +54,31 @@ jobs:
           echo "${{ secrets.GCP_SA_KEY_BASE64 }}" | base64 --decode > /tmp/sa.json
           gcloud auth activate-service-account --key-file=/tmp/sa.json
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
       - name: Set Docker image version
         id: set-version
         run: echo "version=$(date +%Y.%m.%d.%H%M)" >> $GITHUB_OUTPUT
 
-      - name: Build and tag Docker image
+      - name: Build and Push Docker image
         run: |
           docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ steps.set-version.outputs.version }} .
           docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ steps.set-version.outputs.version }} \
                      ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
-      - name: Push Docker image
-        run: |
           docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ steps.set-version.outputs.version }}
           docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest
 
-  # Job 3: Terraform Apply (infra + deploy)
-  terraform:
-    runs-on: ubuntu-latest
-    needs: docker
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.0
-
-      - name: Decode GCP Service Account Base64 for Terraform
-        run: echo "${{ secrets.GCP_SA_KEY_BASE64 }}" | base64 --decode > /tmp/sa.json
-
-      - name: Terraform Init & Apply
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+      - name: Deploy to Cloud Run
         run: |
-          terraform -chdir=terraform init -backend-config="credentials=/tmp/sa.json"
-          terraform -chdir=terraform apply -auto-approve -var="project=${{ env.PROJECT_ID }}" -var="region=${{ env.REGION }}" -var="image_tag=${{ needs.docker.outputs.version }}" -var="dataset_id=ml_dataset" -var="table_id=ml_table"
+          gcloud run deploy ${{ env.IMAGE_NAME }} \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ steps.set-version.outputs.version }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated
 
-  # Job 4: Notificação Slack
+  # Job 3: Slack Notification
   slack-notify:
     runs-on: ubuntu-latest
-    needs: [test, docker, terraform]
+    needs: [test, deploy]
     if: always()
     steps:
       - name: Send Slack notification
