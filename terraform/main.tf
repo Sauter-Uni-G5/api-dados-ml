@@ -1,3 +1,5 @@
+
+
 # Service Account
 resource "google_service_account" "ml_api_sa" {
   account_id   = "ml-api-sa"
@@ -26,11 +28,13 @@ resource "google_project_iam_member" "ml_api_sa_cloud_run_invoker" {
 }
 
 resource "google_artifact_registry_repository_iam_member" "ml_api_sa_reader" {
-  repository = var.repo_name
-  location   = var.region
+  repository = "ml-repo" 
+  location   = "us-central1"
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.ml_api_sa.email}"
 }
+
+
 
 # Cria Dataset BigQuery
 resource "google_bigquery_dataset" "ml_dataset" {
@@ -65,7 +69,7 @@ EOF
 
 # Cria API no Cloud Run
 resource "google_cloud_run_service" "api" {
-  name     = var.image_name
+  name     = "ml-api"
   location = var.region
 
   template {
@@ -73,13 +77,13 @@ resource "google_cloud_run_service" "api" {
       service_account_name = google_service_account.ml_api_sa.email
 
       containers {
-        image = "${var.region}-docker.pkg.dev/${var.project}/${var.repo_name}/${var.image_name}:${var.docker_image_version}"
+        image = var.image
       }
     }
   }
 
   traffic {
-    percent         = 100
-    latest_revision = true
+    percent          = 100
+    latest_revision  = true
   }
 }
