@@ -133,13 +133,9 @@ jobs:
         if: ${{ always() }}
         run: |
           STATUS="SUCCESS"
-          if [ "$GITHUB_RUN_STATUS" != "success" ]; then
+          if [ "${{ job.status }}" != "success" ]; then
             STATUS="FAILED"
           fi
-          curl -X POST -H 'Content-type: application/json' \
-             --data "{\"text\":\"CI/CD Pipeline - ML API finished with status: $STATUS\"}" \
-             ${{ env.SLACK_WEBHOOK }}
-
           curl -X POST -H 'Content-type: application/json' \
                --data "{\"text\":\"CI/CD Pipeline - ML API finished with status: $STATUS\"}" \
                ${{ env.SLACK_WEBHOOK }}
