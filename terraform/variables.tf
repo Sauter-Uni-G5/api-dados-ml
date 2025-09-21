@@ -1,22 +1,24 @@
-provider "google" {
-  project = var.project
-  region  = var.region
+variable "project" {
+  type    = string
+  default = "graphite-byte-472516-n8"
 }
 
-resource "google_cloud_run_service" "api" {
-  name     = var.image_name
-  location = var.region
+variable "region" {
+  type    = string
+  default = "us-central1"
+}
 
-  template {
-    spec {
-      containers {
-        image = "us-central1-docker.pkg.dev/${var.project}/${var.repo_name}/${var.image_name}:${var.docker_image_version}"
-      }
-    }
-  }
+variable "repo_name" {
+  type    = string
+  default = "ml-repo"
+}
 
-  traffic {
-    percent         = 100
-    latest_revision = true
-  }
+variable "image_name" {
+  type    = string
+  default = "ml-api"
+}
+
+variable "docker_image_version" {
+  description = "Versão da imagem Docker a ser usada no Cloud Run"
+  type        = string
 }
