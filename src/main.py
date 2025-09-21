@@ -4,7 +4,7 @@ from src.routes.post_data import router as post_router
 from src.config.logging import logger
 
 app = FastAPI(title="API Dados ML")
-
+# ISSO É UM TESTE
 app.include_router(get_router)
 app.include_router(post_router)
 
